@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+.city {
+   float: left;
+   margin: 10px;
+   padding: 10px;
+   max-width: 300px;
+   height: 300px;
+   border: 1px solid black;
+}   
+</style>
+
+<script type="text/javascript" src="http://cdn.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
+<script type="text/javascript" src="http://cdn.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+<script type="text/javascript" type="text/javascript">
+  // Connecting to ROS
+  // -----------------
+
+  var ros = new ROSLIB.Ros({
+    url : 'ws://localhost:9090'
+  });
+
+  ros.on('connection', function() {
+    console.log('Connected to websocket server.');
+  });
+
+  ros.on('error', function(error) {
+    console.log('Error connecting to websocket server: ', error);
+  });
+
+  ros.on('close', function() {
+    console.log('Connection to websocket server closed.');
+  });
+
+
+
+  // Publishing a Topic
+  // ------------------
+
+  var cmdVel = new ROSLIB.Topic({
+    ros : ros,
+    name : '/cmd_vel',
+    messageType : 'geometry_msgs/Twist'
+  });
+
+  var twist = new ROSLIB.Message({
+    linear : {
+      x : 0.1,
+      y : 0.2,
+      z : 0.3
+    },
+    angular : {
+      x : -0.1,
+      y : -0.2,
+      z : -0.3
+    }
+  });
+
+  function publishTwist() {
+    var e = document.getElementById("menu");
+    var value = e.options[e.selectedIndex].value;
+    twist.linear.x = parseFloat(value);
+    cmdVel.publish(twist);
+  }
+  cmdVel.publish(twist);
+
+  // Subscribing to a Topic
+  // ----------------------
+
+  var listener = new ROSLIB.Topic({
+    ros : ros,
+    name : '/listener',
+    messageType : 'std_msgs/Int32MultiArray'
+  });
+
+  listener.subscribe(function(message) {
+    var select = document.getElementById("menu"); 
+    for(var i = 0; i < message.data.length; i++) {
+      var opt = message.data[i];
+      var el = document.createElement("option");
+      el.textContent = opt;
+      el.value = opt;
+      select.appendChild(el);
+    }
+    //console.log('Received message on ' + listener.name + ': ' + message.data);
+    //listener.unsubscribe();
+  });
+
+  function clearDropbox(comboBox) {
+      while (comboBox.options.length > 0) {                
+          comboBox.remove(0);
+      }        
+  }
+
+  // Service Call
+  // -----------------
+  // <> Menu Options
+  // -----------------
+
+  var getMenu = new ROSLIB.Service({
+    ros : ros,
+    name : '/foodelpi/get_menu',
+    serviceType : 'foodelpi_webservice/GetMenu'
+  });
+
+  var req_menu = new ROSLIB.ServiceRequest({});
+
+  getMenu.callService(req_menu, function(result) {
+    var select = document.getElementById("menu"); 
+    clearDropbox(select)
+    for(var i = 0; i < result.menu_options.length; i++) {
+      var el = document.createElement("option");
+      el.textContent = result.menu_options[i] + " ($" + result.prices[i].toFixed(2) + ")";
+      el.value = i;
+      select.appendChild(el);
+    }
+  });
+
+  // Service Call
+  // -----------------
+  // <> Room List
+  // -----------------
+
+  var getRoomList = new ROSLIB.Service({
+    ros : ros,
+    name : '/foodelpi/get_room_list',
+    serviceType : 'foodelpi_webservice/GetRoomList'
+  });
+
+  var req_rooms = new ROSLIB.ServiceRequest({});
+
+  getRoomList.callService(req_rooms, function(result) {
+    var select = document.getElementById("room_list"); 
+    clearDropbox(select)
+    for(var i = 0; i < result.rooms.length; i++) {
+      var el = document.createElement("option");
+      el.textContent = result.rooms[i];
+      el.value = i;
+      select.appendChild(el);
+      console.log('Received message on ' + result.rooms[i]);
+    }
+  });
+
+</script>
+</head>
+
+
+
+<body>
+  <h1>Kelley Food Delivery Service</h1>
+  <p>Welcome to the website of the Kelley food delivery service. Please <br />
+  choose your items and the room closest to you and complete the order. <br />
+  Pioneer, our little helper, will bring it to you as soon as he can. <br />
+  </p>
+  <table style="height: 184px;" width="600">
+  <tbody>
+  <tr>
+  <td>Menu:</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>Order:</td>
+  </tr>
+  <tr>
+  <td>
+    <select id="menu" multiple="multiple">
+      <option value="0">Waiting for Menu...</option>
+    </select>
+  </td>
+  <td><button>ADD</button></td>
+  <td><button>REMOVE</button></td>
+  <td><select id="order" multiple="multiple"></select></td>
+  </tr>
+  <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  </tr>
+  <tr>
+  <td>Rooms:</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  </tr>
+  <tr>
+  <td>    
+    <select id="room_list">
+      <option value="0">Waiting for room list...</option>
+    </select>
+  </td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td><button>ORDER</button></td>
+  </tr>
+  </tbody>
+  </table>
+
+  
+
+
+</body>
+</html>

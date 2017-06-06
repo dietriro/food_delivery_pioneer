@@ -1,0 +1,4 @@
+---
+bool success   										# indicate successful run of triggered service
+string[] menu_options								# Contains the menu options as a string array 
+float32[] prices 									# Contains the prices of the respective menu options
