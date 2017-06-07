@@ -1,0 +1,77 @@
+- number: 0
+  floor: 1
+  id: 0
+  position:
+    x: 26.2693023682
+    y: 56.3140487671
+    z: 0.0
+  orientation:
+    x: 0.0
+    y: 0.0
+    z: 0.998826982807
+    w: 0.048421673001
+
+- number: 10200
+  floor: 1
+  id: 1
+  position:
+    x: 16.3804073334
+    y: 63.6343841553
+    z: 0.0
+  orientation:
+    x: 0.0
+    y: 0.0
+    z: 0.996694108314
+    w: 0.0812456426669
+
+- number: 10005
+  floor: 1
+  id: 2
+  position:
+    x: 29.0449867249
+    y: 76.9953842163
+    z: 0.0
+  orientation:
+    x: 0.0
+    y: 0.0
+    z: -0.0639546882493
+    w: 0.997952803419
+
+- number: 10300
+  floor: 2
+  id: 3
+  position:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  orientation:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 0.0
+
+- number: 20070
+  floor: 2
+  id: 4
+  position:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  orientation:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 0.0
+
+- number: 30005
+  floor: 3
+  id: 5
+  position:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  orientation:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 0.0

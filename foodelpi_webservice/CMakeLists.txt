@@ -51,9 +51,10 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
-  StringArray.msg
-  Int32Array.msg
-  Float32Array.msg
+  MenuItem.msg
+  Room.msg
+  Order.msg
+  RobotState.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -61,6 +62,9 @@ add_service_files(
   FILES
   GetRoomList.srv
   GetMenu.srv
+  GetOrders.srv
+  SendOrder.srv
+  SendGoal.srv
 )
 
 ## Generate actions in the 'action' folder

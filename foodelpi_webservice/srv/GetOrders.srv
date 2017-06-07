@@ -1,0 +1,3 @@
+---
+bool success   								# indicate successful run of triggered service
+Order[] orders								# The orders from the customers

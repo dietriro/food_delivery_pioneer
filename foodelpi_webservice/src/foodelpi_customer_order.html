@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+.city {
+   float: left;
+   margin: 10px;
+   padding: 10px;
+   max-width: 300px;
+   height: 300px;
+   border: 1px solid black;
+}   
+#menu{
+ width:250px;   
+}
+#order{
+ width:250px;   
+}
+#room_list{
+ width:250px; 
+}
+#but_add{
+ width:100px;   
+ height:50px;
+}
+#but_remove{
+ width:100px;
+ height:50px;   
+}
+#but_order{
+ width:100px;
+ height:50px;   
+}
+input { 
+    text-align: right; 
+}
+</style>
+
+<script type="text/javascript" src="http://cdn.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
+<script type="text/javascript" src="http://cdn.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+<script type="text/javascript" type="text/javascript">
+  // Connecting to ROS
+  // -----------------
+
+  var ros = new ROSLIB.Ros({
+    url : 'ws://localhost:9090'
+  });
+
+  ros.on('connection', function() {
+    console.log('Connected to websocket server.');
+  });
+
+  ros.on('error', function(error) {
+    console.log('Error connecting to websocket server: ', error);
+  });
+
+  ros.on('close', function() {
+    console.log('Connection to websocket server closed.');
+  });
+
+
+  // Global Variables
+  // ---------------------
+
+  var menu_;
+  var total_price_ = 0.0;
+  
+
+  // Functions
+  // -------------
+
+  function clearDropbox(comboBox) {
+    while (comboBox.options.length > 0) {                
+        comboBox.remove(0);
+    }        
+  }
+
+  function add_item() {
+    var sel_menu = document.getElementById("menu");
+    var sel_order = document.getElementById("order");
+    var inp_total_price = document.getElementById("total_price")
+
+    for(var i = 0; i < sel_menu.selectedOptions.length; i++) {
+      var opt = sel_menu.selectedOptions[i].textContent;
+      var val = sel_menu.selectedOptions[i].value;
+      var el = document.createElement("option");
+      
+      el.textContent = opt;
+      el.value = val;
+      
+      total_price_ = total_price_ + menu_[val].price
+
+      sel_order.appendChild(el);
+    }
+
+    inp_total_price.value = '$ ' + total_price_.toFixed(2);
+  }
+
+  function remove_item() {
+    var sel_order = document.getElementById("order");
+    var inp_total_price = document.getElementById("total_price")
+
+    console.log('Id:' + sel_order.selectedIndex)
+
+    while (sel_order.selectedIndex > -1) {
+      var val = sel_order.options[sel_order.selectedIndex].value;
+
+      total_price_ = total_price_ - menu_[val].price
+
+      console.log('price:' + menu_[val].price + '    value: ' + val)
+
+      sel_order.remove(sel_order.selectedIndex)
+    }
+
+    console.log('totalprice:' + total_price_)
+
+    inp_total_price.value = '$ ' + total_price_.toFixed(2);
+  }
+
+  // // Publishing a Topic
+  // // ------------------
+
+  // var cmdVel = new ROSLIB.Topic({
+  //   ros : ros,
+  //   name : '/cmd_vel',
+  //   messageType : 'geometry_msgs/Twist'
+  // });
+
+  // var twist = new ROSLIB.Message({
+  //   linear : {
+  //     x : 0.1,
+  //     y : 0.2,
+  //     z : 0.3
+  //   },
+  //   angular : {
+  //     x : -0.1,
+  //     y : -0.2,
+  //     z : -0.3
+  //   }
+  // });
+
+  // function publishTwist() {
+  //   var e = document.getElementById("menu");
+  //   var value = e.options[e.selectedIndex].value;
+  //   twist.linear.x = parseFloat(value);
+  //   cmdVel.publish(twist);
+  // }
+  // cmdVel.publish(twist);
+
+
+  // // Subscribing to a Topic
+  // // ----------------------
+
+  // var listener = new ROSLIB.Topic({
+  //   ros : ros,
+  //   name : '/listener',
+  //   messageType : 'std_msgs/Int32MultiArray'
+  // });
+
+  // listener.subscribe(function(message) {
+  //   var select = document.getElementById("menu"); 
+  //   for(var i = 0; i < message.data.length; i++) {
+  //     var opt = message.data[i];
+  //     var el = document.createElement("option");
+  //     el.textContent = opt;
+  //     el.value = opt;
+  //     select.appendChild(el);
+  //   }
+  //   //console.log('Received message on ' + listener.name + ': ' + message.data);
+  //   //listener.unsubscribe();
+  // });
+
+
+
+  // Service Call
+  // -----------------
+  // <> Menu Options
+  // -----------------
+
+  var getMenu = new ROSLIB.Service({
+    ros : ros,
+    name : '/foodelpi/get_menu',
+    serviceType : 'foodelpi_webservice/GetMenu'
+  });
+
+  var req_menu = new ROSLIB.ServiceRequest({});
+
+  getMenu.callService(req_menu, function(result) {
+    var select = document.getElementById("menu"); 
+    clearDropbox(select)
+
+    menu_ = result.menu_items;
+
+    for(var i = 0; i < result.menu_items.length; i++) {
+      var el = document.createElement("option");
+      var item = result.menu_items[i];
+      el.textContent = item.name + " ($ " + item.price.toFixed(2) + ")";
+      el.value = item.id;
+      select.appendChild(el);
+    }
+    document.getElementById("total_price").value = '$ 0.00'
+  });
+
+
+
+  // Service Call
+  // -----------------
+  // <> Room List
+  // -----------------
+
+  var getRoomList = new ROSLIB.Service({
+    ros : ros,
+    name : '/foodelpi/get_room_list',
+    serviceType : 'foodelpi_webservice/GetRoomList'
+  });
+
+  var req_rooms = new ROSLIB.ServiceRequest({});
+
+  getRoomList.callService(req_rooms, function(result) {
+    var select = document.getElementById("room_list"); 
+    clearDropbox(select)
+
+    for(var i = 0; i < result.rooms.length; i++) {
+      var el = document.createElement("option");
+      el.textContent = result.rooms[i].number;
+      el.value = result.rooms[i].id;
+      select.appendChild(el);
+      console.log('Received message on ' + result.rooms[i]);
+    }
+  });
+
+
+
+  // Service Call
+  // -----------------
+  // <> Order
+  // -----------------
+
+  var sendOrder = new ROSLIB.Service({
+    ros : ros,
+    name : '/foodelpi/send_order',
+    serviceType : 'foodelpi_webservice/SendOrder'
+  });
+
+  function send_order() {
+    var sel_order = document.getElementById("order");
+    var sel_rooms = document.getElementById("room_list");
+
+    req_room = parseInt(sel_rooms.options[sel_rooms.selectedIndex].textContent);
+    req_menu_items = [];
+
+    for(var i = 0; i < sel_order.options.length; i++) {
+      req_menu_items.push(parseInt(sel_order.options[i].value))
+    }
+
+    var req_order = new ROSLIB.ServiceRequest({
+      room : req_room,
+      menu_items : req_menu_items
+    });
+
+    sendOrder.callService(req_order, function(result) {
+      console.log('Order was successful ' + result.success);
+    });
+
+  }
+
+
+</script>
+</head>
+
+
+
+<body>
+  <h1>Kelley Food Delivery Service</h1>
+  <p>Welcome to the website of the Kelley food delivery service. Please <br />
+  choose your items and the room closest to you and complete the order. <br />
+  Pioneer, our little helper, will bring it to you as soon as he can. <br />
+  </p>
+  <table style="height: 184px;" width="780">
+  <tbody>
+  <tr>
+  <td>Menu:</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>Order:</td>
+  </tr>
+  <tr>
+  <td>
+    <select id="menu" multiple="multiple" size="10" ondblclick="add_item();">
+      <option value="0">Waiting for Menu...</option>
+    </select>
+  </td>
+  <td><button id="but_add" onclick="add_item();">ADD</button></td>
+  <td><button id="but_remove" onclick="remove_item();">REMOVE</button></td>
+  <td><select id="order" multiple="multiple" size="10" ondblclick="remove_item();"></select></td>
+  </tr>
+  <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>Total Price:</td>
+  <td><input type="text" id="total_price" placeholder="$ 0.00" align="right" disabled></td>
+  </tr>
+  <tr>
+  <td>Select the room closest to you:</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td rowspan="2" align="right"><button id="but_order" onclick="send_order();">ORDER</button></td>
+  </tr>
+  <tr>
+  <td>    
+    <select id="room_list">
+      <option value="0">Waiting for room list...</option>
+    </select>
+  </td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  </tr>
+  </tbody>
+  </table>
+
+  
+
+
+</body>
+</html>

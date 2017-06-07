@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+.city {
+   float: left;
+   margin: 10px;
+   padding: 10px;
+   max-width: 300px;
+   height: 300px;
+   border: 1px solid black;
+}   
+table, td {
+    border: 1px solid black;
+}
+#order{
+ width:250px;   
+}
+#but_deliver{
+ width:100px;   
+ height:50px;
+ font-size: 18px;
+}
+#but_return{
+ width:100px;   
+ height:50px;
+ font-size: 18px;
+}
+#but_remove{
+ width:100px;
+ height:50px;   
+}
+#but_order{
+ width:100px;
+ height:50px;   
+}
+</style>
+
+<script type="text/javascript" src="http://cdn.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
+<script type="text/javascript" src="http://cdn.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+<script type="text/javascript" type="text/javascript">
+  // Connecting to ROS
+  // -----------------
+
+  var ros = new ROSLIB.Ros({
+    url : 'ws://localhost:9090'
+  });
+
+  ros.on('connection', function() {
+    console.log('Connected to websocket server.');
+  });
+
+  ros.on('error', function(error) {
+    console.log('Error connecting to websocket server: ', error);
+  });
+
+  ros.on('close', function() {
+    console.log('Connection to websocket server closed.');
+  });
+
+
+  // Global Variables
+  // ---------------------
+
+  var menu_;
+  var total_price_ = 0.0;
+  
+
+  // Functions
+  // -------------
+
+  function clearDropbox(comboBox) {
+    while (comboBox.options.length > 0) {                
+        comboBox.remove(0);
+    }        
+  }
+
+  function create_menu_items(items) {
+    var select = document.createElement("select");
+
+    select.disabled = true
+    select.multiple = true
+    select.id = "order"
+
+    for(var i = 0; i < items.length; i++) {
+      var el = document.createElement("option");
+      var item = items[i];
+      el.textContent = item.name + " ($ " + item.price.toFixed(2) + ")";
+      el.value = item.id;
+      select.appendChild(el);
+    }
+    return select;
+  }
+
+  function add_order(table, order) {
+    var table = document.getElementById(table);
+    var row = table.insertRow(table.rows.length);
+    var cell1 = row.insertCell(0);
+    var cell2 = row.insertCell(1);
+    var cell3 = row.insertCell(2);
+
+    var but_deliver = document.createElement("button");
+    but_deliver.innerHTML = "DELIVER";
+    but_deliver.id = "but_deliver";
+    but_deliver.setAttribute( "onClick", "javascript: deliver_item("+order.room+");" );
+
+    select = create_menu_items(order.menu_items);
+
+    cell1.appendChild(select);
+    cell2.innerHTML = order.room;
+    cell2.style.fontSize = "25px";
+    cell3.appendChild(but_deliver);
+    cell3.align = "center";
+  }
+
+  // // Publishing a Topic
+  // // ------------------
+
+  // var cmdVel = new ROSLIB.Topic({
+  //   ros : ros,
+  //   name : '/cmd_vel',
+  //   messageType : 'geometry_msgs/Twist'
+  // });
+
+  // var twist = new ROSLIB.Message({
+  //   linear : {
+  //     x : 0.1,
+  //     y : 0.2,
+  //     z : 0.3
+  //   },
+  //   angular : {
+  //     x : -0.1,
+  //     y : -0.2,
+  //     z : -0.3
+  //   }
+  // });
+
+  // function publishTwist() {
+  //   var e = document.getElementById("menu");
+  //   var value = e.options[e.selectedIndex].value;
+  //   twist.linear.x = parseFloat(value);
+  //   cmdVel.publish(twist);
+  // }
+  // cmdVel.publish(twist);
+
+
+  // Subscriber
+  // ----------------------
+  // <> Robot Status
+  // ----------------------
+
+  var sub_robot_state = new ROSLIB.Topic({
+    ros : ros,
+    name : '/foodelpi/robot_state',
+    messageType : 'foodelpi_webservice/RobotState'
+  });
+
+  sub_robot_state.subscribe(function(msg) {
+    
+    var table = document.getElementById("tbl_robot_state");
+    table.rows[1].cells[1].innerHTML = msg.status_name
+
+    console.log('Received message on : ' + msg.status_name);
+    //listener.unsubscribe();
+  });
+
+
+
+  // Service Call
+  // -----------------
+  // <> Get Orders
+  // -----------------
+
+  var getOrders = new ROSLIB.Service({
+    ros : ros,
+    name : '/foodelpi/get_orders',
+    serviceType : 'foodelpi_webservice/GetOrders'
+  });
+
+  var req_orders = new ROSLIB.ServiceRequest({});
+
+  getOrders.callService(req_orders, function(result) {
+    for(var i = 0; i < result.orders.length; i++) {
+      add_order("tbl_orders", result.orders[i]);
+    }
+  });
+
+
+  // Service Call
+  // -----------------
+  // <> Send Goal
+  // -----------------
+
+  var sendGoal = new ROSLIB.Service({
+    ros : ros,
+    name : '/foodelpi/send_goal',
+    serviceType : 'foodelpi_webservice/SendGoal'
+  });
+
+  function deliver_item(room_nb) {
+
+    console.log('Goal sent to ' + room_nb);
+
+    var req_goal = new ROSLIB.ServiceRequest({
+      room : room_nb
+    });
+
+    sendGoal.callService(req_goal, function(result) {
+      console.log('Goal was successful sent ' + result.success);
+    });
+  }
+
+</script>
+</head>
+
+
+
+<body>
+  <h1>Kelley Food Delivery Service - Caffe</h1>
+  <p>Welcome to the website of the Kelley food delivery service. Please <br />
+  choose your items and the room closest to you and complete the order. <br />
+  Pioneer, our little helper, will bring it to you as soon as he can. <br />
+  </p>
+
+
+  <h2>Robot Status</h2>
+  <table style="height: 120px; width: 600px; font-size: 20px;" id="tbl_robot_state">
+  <tbody>
+  <tr>
+  <td>Floor</td>
+  <td>Status</td>
+  <td>Action</td>
+  </tr>
+  <tr>
+  <td>1</td>
+  <td>Waiting...</td>
+  <td align="center"><button id="but_return" onclick="javascript: deliver_item(0);">RETURN</button></td>
+  </tr>
+  </tbody>
+  </table>
+
+
+  <h2>Order Overview</h2>
+  <table style="width: 600px; font-size: 20px;" id="tbl_orders">
+  <tbody>
+  <tr style="height: 50px;">
+  <td>Menu items of order</td>
+  <td>Destination room</td>
+  <td>Action</td>
+  </tr>
+  </tbody>
+  </table>
+
+  
+
+
+</body>
+</html>

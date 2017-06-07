@@ -1,0 +1,4 @@
+uint16 room											# The room number to which the order shall be delivered (0 for returning to caffe)
+---
+bool success   										# indicate successful run of triggered service
+
