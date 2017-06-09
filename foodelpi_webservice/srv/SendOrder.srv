@@ -1,0 +1,5 @@
+uint16 room											# The room to which the order shall be delivered
+uint16[] menu_items								# Contains the menu options chosen by the customer 
+---
+bool success   										# indicate successful run of triggered service
+

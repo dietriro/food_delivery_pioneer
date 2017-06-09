@@ -1,0 +1,3 @@
+---
+bool success   										# indicate successful run of triggered service
+MenuItem[] menu_items								# The items of the food menu

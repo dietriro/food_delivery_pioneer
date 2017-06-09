@@ -1,7 +1,7 @@
 <launch>
 
   <!-- Map server -->
-  <arg name="map_file" default="$(find foodelpi_navigation)/resources/maps/map_kelley.yaml"/>
+  <arg name="map_file" default="$(find foodelpi_navigation)/resources/maps/map_graf.yaml"/>
   <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
 
   <!-- AMCL -->
@@ -18,7 +18,7 @@
   </include>
 
   <!-- Move base --> 
-  <include file="$(find foodelpi_navigation)/launch/pioneer_2dnav/pioneer_move_base.launch.xml"/>
+  <include file="$(find foodelpi_navigation)/launch/pioneer_move_base.launch.xml"/>
 
 </launch>
 

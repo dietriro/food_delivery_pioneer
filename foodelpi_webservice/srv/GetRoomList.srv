@@ -1,0 +1,3 @@
+---
+bool success   							# indicate successful run of triggered service
+Room[] rooms 							# A list of the rooms 
