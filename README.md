@@ -1,5 +1,4 @@
-# Project: Food Delivery Pioneer
-ROB599 - Mobile Robots - Class Project
+# Food Delivery Pioneer
 
 ## Description
 This repository includes code for an autonomous food delivery robot implemented for the final project of class ROB551 (Mobile Robots) at Oregon State University. The goal of this project was to offer a service where a student can order something through an online platform, an employee packs the order ontop of the robot and sends it to the student (via a website as well). We created a webservice for both the employee and the customer using the rosbridge-suite (wiki.ros.org/rosbridge_suite). Additionaly the standard map-server was extended in order to be able to switch between different maps online. For traveling between multiple floors, the robot is equipped with an arm which is able to push elevator buttons and a camera for the detection of the buttons.
